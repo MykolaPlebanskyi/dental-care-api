@@ -23,20 +23,28 @@ class UserManager(BaseUserManager):
         user.save()
         return user
 
+    def create_superuser(self, email, password):
+        """Create and return a superuser with given details."""
+        user = self.create_user(email, password)
+        user.is_staff = True
+        user.is_superuser = True
+        user.save(using=self._db)
+
+        return user
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     """User in the system."""
-    ROLE_CHOICES = [
-        ('admin', 'Адміністратор'),
-        ('dentist', 'Стоматолог'),
-        ('patient', 'Пацієнт'),
-        ('guest', 'Гість'),
-    ]
+    class ROLES(models.TextChoices):
+        ADMIN = 'admin', 'Адміністратор'
+        DENTIST = 'dentist', 'Стоматолог'
+        PATIENT = 'patient', 'Пацієнт'
+        GUEST = 'guest', 'Гість'
 
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='guest')
+    role = models.CharField(max_length=10, choices=ROLES.choices, default=ROLES.GUEST)
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
