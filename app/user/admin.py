@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import User, Dentist
+from django import forms
 
 @admin.register(User)
 class CustomUserAdmin(BaseUserAdmin):
@@ -33,3 +34,48 @@ class CustomUserAdmin(BaseUserAdmin):
                 user.must_change_password = False
                 user.save()
         return response
+
+class DentistAdminForm(forms.ModelForm):
+    first_name = forms.CharField()
+    last_name = forms.CharField()
+
+    class Meta:
+        model = Dentist
+        fields = ['first_name', 'last_name', 'specialization', 'biography', 'photo']
+
+    def generate_unique_email(self, first_name, last_name):
+        domain = "clinic.com"
+        base_email = f"{last_name.lower()}.{first_name.lower()}@{domain}"
+        email = base_email
+        counter = 1
+        while User.objects.filter(email=email).exists():
+            email = f"{last_name.lower()}.{first_name.lower()}{counter}@{domain}"
+            counter += 1
+        return email
+
+    def save(self, commit=True):
+        first_name = self.cleaned_data['first_name']
+        last_name = self.cleaned_data['last_name']
+        email = self.generate_unique_email(first_name, last_name)
+
+        user = User.objects.create_user(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            role=User.ROLES.DENTIST
+        )
+
+        dentist = super().save(commit=False)
+        dentist.user = user
+
+        if commit:
+            dentist.save()
+
+        return dentist
+
+
+@admin.register(Dentist)
+class DentistAdmin(admin.ModelAdmin):
+    form = DentistAdminForm
+    list_display = ['user', 'specialization']
+    search_fields = ['user__first_name', 'user__last_name', 'specialization']

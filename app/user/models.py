@@ -57,3 +57,27 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name} ({self.email})'
+
+class Dentist(models.Model):
+    """Dentist profile model with specialization and biography."""
+
+    SPECIALIZATIONS = [
+        ('therapist', 'Терапевт'),
+        ('surgeon', 'Хірург'),
+        ('orthodontist', 'Ортодонт'),
+        ('prosthodontist', 'Ортопед'),
+        ('periodontist', 'Пародонтолог'),
+        ('endodontist', 'Ендодонтист'),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='dentist_profile'
+    )
+    specialization = models.CharField(max_length=30, choices=SPECIALIZATIONS)
+    biography = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='dentist_photos/', blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.user.first_name} {self.user.last_name} - {self.get_specialization_display()}'

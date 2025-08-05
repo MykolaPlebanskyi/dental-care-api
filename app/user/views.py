@@ -6,8 +6,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenBlacklistVi
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
-from .serializers import UserSerializer, RegisterSerializer, LogoutSerializer
+from .models import User, Dentist
+from .serializers import UserSerializer, RegisterSerializer, LogoutSerializer, DentistCreateSerializer
 from rest_framework.permissions import IsAuthenticated
 
 class RegisterView(generics.CreateAPIView):
@@ -40,3 +40,8 @@ class LogoutView(generics.GenericAPIView):
             return Response({"detail": "Успішний вихід."})
         except Exception:
             return Response({"error": "Помилка виходу."}, status=400)
+
+class DentistCreateAPIView(generics.CreateAPIView):
+    queryset = Dentist.objects.all()
+    serializer_class = DentistCreateSerializer
+    permission_classes = [permissions.IsAdminUser]
